@@ -22,6 +22,9 @@ co(function* () {
         password: addParameters(jsonFile.machine.password)
     });
 
+    const sftp = yield ssh.requestSFTP();
+    const shell = yield ssh.requestShell();
+
     const directories = jsonFile.directories;
 
     for (const directory of directories) {
@@ -36,37 +39,19 @@ co(function* () {
         subDirectories = subDirectories.map((x) => path.join(addParameters(directory.destination), path.relative(addParameters(directory.source), x)));
 
         for (const subDirectory of subDirectories) {
-            const result = yield ssh.execCommand(`mkdir ${subDirectory.replace(/\\/g, '/')}`);
+            const result = yield ssh.execCommand(`mkdir -p ${subDirectory.replace(/\\/g, '/')}`);
             console.log(`Successfully created '${subDirectory.replace(/\\/g, '/')}`);
         }
 
         for (const file of files) {
-            const result = yield ssh.putFiles([{ local: addParameters(file), remote: path.join(addParameters(directory.destination), path.relative(addParameters(directory.source), file)) }]);
+            const result = yield ssh.putFile(addParameters(file), path.join(addParameters(directory.destination), path.relative(addParameters(directory.source), file)), sftp);
             console.log(`Successfully copied '${addParameters(file)}' to '${path.join(addParameters(directory.destination), path.relative(addParameters(directory.source), file))}'`);
         }
     }
 
-
-
-    // for (const directory of directories) {
-    //     const result = yield ssh.putDirectory(addParameters(directory.source), addParameters(directory.destination), {
-    //         recursive: true,
-    //         validate: function (itemPath) {
-    //             return true;
-    //         },
-    //         tick: function (localPath, remotePath, error) {
-    //             if (error) {
-    //                 console.log(`Failed to copy '${localPath}' to '${remotePath}' -> ${error.message}`);
-    //             } else {
-    //                 console.log(`Successfully copied '${localPath}' to '${remotePath}'`);
-    //             }
-    //         }
-    //     });
-    // }
-
     const files = jsonFile.files;
     for (const file of files) {
-        const result = yield ssh.putFiles([{ local: addParameters(file.source), remote: addParameters(file.destination) }]);
+        const result = yield ssh.putFile(addParameters(file.source), addParameters(file.destination), sftp);
         console.log(`Successfully copied '${addParameters(file.source)}' to '${addParameters(file.destination)}'`);
     }
 
@@ -97,6 +82,3 @@ function addParameters(str) {
     }
     return str;
 }
-
-// node app.js --machine 46.101.50.101 --username root --password MidericK96 --workspace "F:\Development\barend-erasmus\world-of-rations-service"
-
