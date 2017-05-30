@@ -1,0 +1,28 @@
+{
+  "name": "ssh-deployer",
+  "version": "0.2.0",
+  "description": "",
+  "main": "./src/app.js",
+  "scripts": {
+    "start": "node ./src/app.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/barend-erasmus/ssh-deployer.git"
+  },
+  "author": "Barend Erasmus",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/barend-erasmus/ssh-deployer/issues"
+  },
+  "homepage": "https://github.com/barend-erasmus/ssh-deployer#readme",
+  "dependencies": {
+    "co": "^4.6.0",
+    "fs-extra": "^3.0.1",
+    "node-ssh": "^4.2.2",
+    "yargs": "^8.0.1"
+  },
+  "bin": {
+    "ssh-deployer": "./bin/ssh-deployer"
+  }
+}

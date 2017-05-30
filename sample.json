@@ -1,0 +1,18 @@
+{
+    "machine": {
+        "host": "$machine",
+        "username": "$username",
+        "password": "$password"
+    },
+    "commands": [
+        "ifconfig",
+        "npm --help"
+    ],
+    "directories": [
+        {
+            "source": "./dist",
+            "destination": "/uploads"
+        }
+    ],
+    "files": []
+}
