@@ -44,15 +44,15 @@ co(function* () {
         }
 
         for (const file of files) {
-            const result = yield ssh.putFile(addParameters(file), path.join(addParameters(directory.destination), path.relative(addParameters(directory.source), file)), sftp);
-            console.log(`Successfully copied '${addParameters(file)}' to '${path.join(addParameters(directory.destination), path.relative(addParameters(directory.source), file))}'`);
+            const result = yield ssh.putFile(addParameters(file).replace(/\\/g, '/'), path.join(addParameters(directory.destination), path.relative(addParameters(directory.source), file)).replace(/\\/g, '/'), sftp);
+            console.log(`Successfully copied '${addParameters(file).replace(/\\/g, '/')}' to '${path.join(addParameters(directory.destination), path.relative(addParameters(directory.source), file)).replace(/\\/g, '/')}'`);
         }
     }
 
     const files = jsonFile.files;
     for (const file of files) {
-        const result = yield ssh.putFile(addParameters(file.source), addParameters(file.destination), sftp);
-        console.log(`Successfully copied '${addParameters(file.source)}' to '${addParameters(file.destination)}'`);
+        const result = yield ssh.putFile(addParameters(file.source).replace(/\\/g, '/'), addParameters(file.destination).replace(/\\/g, '/'), sftp);
+        console.log(`Successfully copied '${addParameters(file.source).replace(/\\/g, '/')}' to '${addParameters(file.destination).replace(/\\/g, '/')}'`);
     }
 
     const commands = jsonFile.commands;
