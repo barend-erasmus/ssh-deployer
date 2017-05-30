@@ -1,6 +1,8 @@
 const node_ssh = require('node-ssh');
 const co = require('co');
 const fs = require('fs-extra');
+const path = require('path');
+const recursiveReadSync = require('recursive-readdir-sync');
 const argv = require('yargs')
     .usage('Usage: $0 [options]')
     .alias('f', 'file')
@@ -21,6 +23,24 @@ co(function* () {
     });
 
     const directories = jsonFile.directories;
+
+    for (const directory of directories) {
+
+        let subDirectories = recursiveReadSync(addParameters(directory.source)).map((x) => path.dirname(x));
+
+        subDirectories = subDirectories.filter(function (elem, pos) {
+            return subDirectories.indexOf(elem) == pos;
+        });
+
+        subDirectories = subDirectories.map((x) => path.join(addParameters(directory.destination), path.relative(addParameters(directory.source), x)));
+
+        for (const subDirectory of subDirectories) {
+            const result = yield ssh.execCommand(`mkdir ${subDirectory.replace(/\\/g, '/')}`);
+        }
+    }
+
+
+
     for (const directory of directories) {
         const result = yield ssh.putDirectory(addParameters(directory.source), addParameters(directory.destination), {
             recursive: true,
@@ -29,7 +49,7 @@ co(function* () {
             },
             tick: function (localPath, remotePath, error) {
                 if (error) {
-                    console.log(`Failed to copy '${localPath}' to '${remotePath}'`);
+                    console.log(`Failed to copy '${localPath}' to '${remotePath}' -> ${error.message}`);
                 } else {
                     console.log(`Successfully copied '${localPath}' to '${remotePath}'`);
                 }
