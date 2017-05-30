@@ -26,7 +26,8 @@ co(function* () {
 
     for (const directory of directories) {
 
-        let subDirectories = recursiveReadSync(addParameters(directory.source)).map((x) => path.dirname(x));
+        const files = recursiveReadSync(addParameters(directory.source));
+        let subDirectories = files.map((x) => path.dirname(x));
 
         subDirectories = subDirectories.filter(function (elem, pos) {
             return subDirectories.indexOf(elem) == pos;
@@ -36,26 +37,32 @@ co(function* () {
 
         for (const subDirectory of subDirectories) {
             const result = yield ssh.execCommand(`mkdir ${subDirectory.replace(/\\/g, '/')}`);
+            console.log(`Successfully created '${subDirectory.replace(/\\/g, '/')}`);
+        }
+
+        for (const file of files) {
+            const result = yield ssh.putFiles([{ local: addParameters(file), remote: path.join(addParameters(directory.destination), path.relative(addParameters(directory.source), file)) }]);
+            console.log(`Successfully copied '${addParameters(file)}' to '${path.join(addParameters(directory.destination), path.relative(addParameters(directory.source), file))}'`);
         }
     }
 
 
 
-    for (const directory of directories) {
-        const result = yield ssh.putDirectory(addParameters(directory.source), addParameters(directory.destination), {
-            recursive: true,
-            validate: function (itemPath) {
-                return true;
-            },
-            tick: function (localPath, remotePath, error) {
-                if (error) {
-                    console.log(`Failed to copy '${localPath}' to '${remotePath}' -> ${error.message}`);
-                } else {
-                    console.log(`Successfully copied '${localPath}' to '${remotePath}'`);
-                }
-            }
-        });
-    }
+    // for (const directory of directories) {
+    //     const result = yield ssh.putDirectory(addParameters(directory.source), addParameters(directory.destination), {
+    //         recursive: true,
+    //         validate: function (itemPath) {
+    //             return true;
+    //         },
+    //         tick: function (localPath, remotePath, error) {
+    //             if (error) {
+    //                 console.log(`Failed to copy '${localPath}' to '${remotePath}' -> ${error.message}`);
+    //             } else {
+    //                 console.log(`Successfully copied '${localPath}' to '${remotePath}'`);
+    //             }
+    //         }
+    //     });
+    // }
 
     const files = jsonFile.files;
     for (const file of files) {

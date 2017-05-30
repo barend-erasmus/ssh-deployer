@@ -10,7 +10,7 @@
     ],
     "directories": [
         {
-            "source": "./dist",
+            "source": "./test",
             "destination": "/uploads"
         }
     ],
