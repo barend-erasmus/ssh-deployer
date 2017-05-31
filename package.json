@@ -1,10 +1,10 @@
 {
   "name": "ssh-deployer",
-  "version": "0.3.3",
+  "version": "0.3.4",
   "description": "",
   "main": "./src/app.js",
   "scripts": {
-    "start": "node ./src/app.js -f sample.json --machine 178.62.4.177 --username root --password MidericK96"
+    "start": "node ./src/app.js -f sample.json --machine yourhost --username yourusername --password yourpassword"
   },
   "repository": {
     "type": "git",
@@ -19,6 +19,7 @@
   "dependencies": {
     "co": "^4.6.0",
     "fs-extra": "^3.0.1",
+    "mongodb": "^2.2.27",
     "node-ssh": "^4.2.2",
     "recursive-readdir-sync": "^1.0.6",
     "yargs": "^8.0.1"
