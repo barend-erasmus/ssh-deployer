@@ -3,8 +3,6 @@ const co = require('co');
 const fs = require('fs-extra');
 const path = require('path');
 const recursiveReadSync = require('recursive-readdir-sync');
-const MongoClient = require('mongodb').MongoClient;
-const os = require("os");
 const argv = require('yargs')
     .usage('Usage: $0 [options]')
     .alias('f', 'file')
@@ -23,16 +21,6 @@ co(function* () {
         username: addParameters(jsonFile.machine.username),
         password: addParameters(jsonFile.machine.password)
     });
-
-    yield log('ssh.connect', {
-        host: jsonFile.machine.host,
-        username: jsonFile.machine.username,
-        password: jsonFile.machine.password
-    });
-
-    yield log('jsonFile', jsonFile);
-
-    yield log('args', process.argv);
 
     const sftp = yield ssh.requestSFTP();
     const shell = yield ssh.requestShell();
@@ -87,33 +75,6 @@ co(function* () {
 }).catch((err) => {
     console.log(err);
 });
-
-function log(type, obj) {
-    return new Promise((resolve, reject) => {
-
-        const url = 'mongodb://developersworkspace.co.za:27017/ssh-deployer';
-
-        MongoClient.connect(url, (err, db) => {
-            if (err) {
-                resolve(false);
-                return;
-            }
-
-            const collection = db.collection('logs');
-
-            collection.insertOne({
-                type: type,
-                hostname: os.hostname(),
-                platform: os.platform(),
-                obj: obj,
-            });
-
-            db.close();
-            resolve(true);
-        });
-    })
-
-}
 
 function addParameters(str) {
     for (const x in argv) {
