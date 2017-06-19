@@ -56,9 +56,10 @@ co(function* () {
 
         // Copies files from source to destination
         for (const file of files) {
-            const parsedSourceFile = toLinuxPath(addParameters(file));
+            const parsedSourceFile = toLinuxPath(path.join(parsedDirectorySource, addParameters(file)));
             const parsedDestinationFile = toLinuxPath(path.join(parsedDirectoryDestination, path.relative(parsedDirectorySource, file)));
 
+            winston.info(`Queuing '${parsedSourceFile}' to '${parsedDestinationFile}'`);
             const result = yield ssh.putFile(parsedSourceFile, parsedDestinationFile, sftp);
             winston.info(`Successfully copied '${parsedSourceFile}' to '${parsedDestinationFile}'`);
         }
@@ -70,6 +71,7 @@ co(function* () {
         const parsedSourceFile = toLinuxPath(addParameters(file.source));
         const parsedDestinationFile = toLinuxPath(addParameters(file.destination));
 
+        winston.info(`Queuing '${parsedSourceFile}' to '${parsedDestinationFile}'`);
         const result = yield ssh.putFile(parsedSourceFile, parsedDestinationFile, sftp);
         winston.info(`Successfully copied '${parsedSourceFile}' to '${parsedDestinationFile}'`);
     }
