@@ -2,6 +2,7 @@ const node_ssh = require('node-ssh');
 const co = require('co');
 const fs = require('fs-extra');
 const path = require('path');
+const winston = require('winston')
 const recursiveReadSync = require('recursive-readdir-sync');
 const argv = require('yargs')
     .usage('Usage: $0 [options]')
@@ -9,6 +10,9 @@ const argv = require('yargs')
     .describe('file', 'JSON Configuration File')
     .demandOption('file')
     .argv;
+
+winston.add(winston.transports.File, { filename: 'ssh-deployer.log', level: 'debug' });
+winston.debug(`Start`, argv);
 
 const jsonFile = fs.readJsonSync(argv.file);
 
@@ -29,52 +33,73 @@ co(function* () {
 
     for (const directory of directories) {
 
-        const files = recursiveReadSync(addParameters(directory.source));
+        // Adds parameters to directory source and destination
+        const parsedDirectorySource = addParameters(directory.source);
+        const parsedDirectoryDestination = addParameters(directory.destination);
+        
+        // Builds list of files in source directory and map to relative path
+        const files = recursiveReadSync(parsedDirectorySource).map((x) => path.relative(parsedDirectorySource, x));
+        
+        // Builds list of sub directories in source directory
         let subDirectories = files.map((x) => path.dirname(x));
-
-        subDirectories = subDirectories.filter(function (elem, pos) {
+        subDirectories = subDirectories.filter((elem, pos) => {
             return subDirectories.indexOf(elem) == pos;
         });
 
-        subDirectories = subDirectories.map((x) => path.join(addParameters(directory.destination), path.relative(addParameters(directory.source), x)));
-
+        // Creates sub directories on destination
         for (const subDirectory of subDirectories) {
-            const result = yield ssh.execCommand(`mkdir -p ${subDirectory.replace(/\\/g, '/')}`);
-            console.log(`Successfully created '${subDirectory.replace(/\\/g, '/')}`);
+            const parsedSubDirectory = toLinuxPath(path.join(parsedDirectoryDestination, subDirectory));
+
+            const result = yield ssh.execCommand(`mkdir -p ${parsedSubDirectory}`);
+            winston.info(`Successfully created '${parsedSubDirectory}`);
         }
 
+        // Copies files from source to destination
         for (const file of files) {
-            const result = yield ssh.putFile(addParameters(file).replace(/\\/g, '/'), path.join(addParameters(directory.destination), path.relative(addParameters(directory.source), file)).replace(/\\/g, '/'), sftp);
-            console.log(`Successfully copied '${addParameters(file).replace(/\\/g, '/')}' to '${path.join(addParameters(directory.destination), path.relative(addParameters(directory.source), file)).replace(/\\/g, '/')}'`);
+            const parsedSourceFile = toLinuxPath(addParameters(file));
+            const parsedDestinationFile = toLinuxPath(path.join(parsedDirectoryDestination, path.relative(parsedDirectorySource, file)));
+
+            const result = yield ssh.putFile(parsedSourceFile, parsedDestinationFile, sftp);
+            winston.info(`Successfully copied '${parsedSourceFile}' to '${parsedDestinationFile}'`);
         }
     }
 
+    // Copies files from source to destination
     const files = jsonFile.files;
     for (const file of files) {
-        const result = yield ssh.putFile(addParameters(file.source).replace(/\\/g, '/'), addParameters(file.destination).replace(/\\/g, '/'), sftp);
-        console.log(`Successfully copied '${addParameters(file.source).replace(/\\/g, '/')}' to '${addParameters(file.destination).replace(/\\/g, '/')}'`);
+        const parsedSourceFile = toLinuxPath(addParameters(file.source));
+        const parsedDestinationFile = toLinuxPath(addParameters(file.destination));
+
+        const result = yield ssh.putFile(parsedSourceFile, parsedDestinationFile, sftp);
+        winston.info(`Successfully copied '${parsedSourceFile}' to '${parsedDestinationFile}'`);
     }
 
+
+    // Execute commands
     const commands = jsonFile.commands;
     for (const command of commands) {
         const result = yield ssh.execCommand(addParameters(command));
 
         if (result.code !== 0) {
-            console.log(result.stderr);
-            console.log(`ERROR -> ${result.code}`);
+            winston.error(result.stderr, result);
+            winston.error(`ERROR -> ${result.code}`);
 
             if (argv.exitOnError) {
                 process.exit(result.code);
             }
         } else {
-            console.log(result.stdout);
+            winston.info(result.stdout);
         }
     }
 
     ssh.dispose();
 }).catch((err) => {
-    console.log(err);
+    winston.error(err.message, err);
 });
+
+function toLinuxPath(str) {
+    return str.replace(/\\/g, '/');
+}
 
 function addParameters(str) {
     for (const x in argv) {
