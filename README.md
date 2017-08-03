@@ -1,4 +1,4 @@
-# ssh-deployer
+# SSH Deployer
 
 SSH-Deployer is designed to run commands and copy files/directories over SSH using a preconfigured JSON file.
 
@@ -24,10 +24,6 @@ Create your JSON file. In this case it would be....
         "username": "your-ssh-username",
         "password": "your-ssh-password"
     },
-    "commands": [
-        "sudo apt-get update",
-        "sudo ufw status"
-    ],
     "directories": [
         {
             "source": "./dist",
@@ -39,6 +35,10 @@ Create your JSON file. In this case it would be....
             "source": "./web.config",
             "destination": "/opt/app/web.config"
         }
+    ],
+    "commands": [
+        "sudo apt-get update",
+        "sudo ufw status"
     ]
 }
 ```
@@ -63,10 +63,6 @@ Parameters can be added by using the '$' sign. For example.
         "username": "$username",
         "password": "$password"
     },
-    "commands": [
-        "sudo apt-get update",
-        "sudo ufw status"
-    ],
     "directories": [
         {
             "source": "./dist",
@@ -78,6 +74,10 @@ Parameters can be added by using the '$' sign. For example.
             "source": "./web.config",
             "destination": "/opt/$appname/web.config"
         }
+    ],
+    "commands": [
+        "sudo apt-get update",
+        "sudo ufw status"
     ]
 }
 ```
@@ -85,3 +85,11 @@ Parameters can be added by using the '$' sign. For example.
 To execute this file with parameters, run the following command.
 
 `ssh-deployer --file "sample.json" --host 192.168.1.100 --username hello --password world --appname myapp`
+
+## Notes
+
+The order of execution is as follow:
+
+* Copies directories in the given order.
+* Copies files in the given order.
+* Executes commands in the given order.
