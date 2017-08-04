@@ -11,7 +11,7 @@ Options:
 
 ## Getting Started
 
-Install 'ssh-deployer' globally by running the following command
+Install 'ssh-deployer' globally by running the following command.
 
 `npm install -g ssh-deployer`
 
