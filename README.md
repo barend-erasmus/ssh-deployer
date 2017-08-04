@@ -13,7 +13,7 @@ Options:
 
 Install 'ssh-deployer' globally by running the following command
 
-`npm instal -g ssh-deployer`
+`npm install -g ssh-deployer`
 
 Create your JSON file. In this case it would be....
 
