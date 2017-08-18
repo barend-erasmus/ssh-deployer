@@ -1,5 +1,4 @@
 const node_ssh = require('node-ssh');
-const co = require('co');
 const fs = require('fs-extra');
 const path = require('path');
 const winston = require('winston')
