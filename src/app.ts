@@ -16,18 +16,21 @@ winston.debug(`Start`, argv);
 
 const jsonFile = fs.readJsonSync(argv.file);
 
-co(function* () {
+app().catch((err: Error) => {
+    winston.error(err);
+})
 
+async function app() {
     const ssh = new node_ssh();
 
-    yield ssh.connect({
+    await ssh.connect({
         host: addParameters(jsonFile.machine.host),
         username: addParameters(jsonFile.machine.username),
         password: addParameters(jsonFile.machine.password)
     });
 
-    const sftp = yield ssh.requestSFTP();
-    const shell = yield ssh.requestShell();
+    const sftp = await ssh.requestSFTP();
+    const shell = await ssh.requestShell();
 
     const directories = jsonFile.directories;
 
@@ -36,10 +39,10 @@ co(function* () {
         // Adds parameters to directory source and destination
         const parsedDirectorySource = addParameters(directory.source);
         const parsedDirectoryDestination = addParameters(directory.destination);
-        
+
         // Builds list of files in source directory and map to relative path
         const files = recursiveReadSync(parsedDirectorySource).map((x) => path.relative(parsedDirectorySource, x));
-        
+
         // Builds list of sub directories in source directory
         let subDirectories = files.map((x) => path.dirname(x));
         subDirectories = subDirectories.filter((elem, pos) => {
@@ -50,7 +53,7 @@ co(function* () {
         for (const subDirectory of subDirectories) {
             const parsedSubDirectory = toLinuxPath(path.join(parsedDirectoryDestination, subDirectory));
 
-            const result = yield ssh.execCommand(`mkdir -p ${parsedSubDirectory}`);
+            const result = await ssh.execCommand(`mkdir -p ${parsedSubDirectory}`);
             winston.info(`Successfully created '${parsedSubDirectory}`);
         }
 
@@ -60,7 +63,7 @@ co(function* () {
             const parsedDestinationFile = toLinuxPath(path.join(parsedDirectoryDestination, addParameters(file)));
 
             winston.info(`Queuing '${parsedSourceFile}' to '${parsedDestinationFile}'`);
-            const result = yield ssh.putFile(parsedSourceFile, parsedDestinationFile, sftp);
+            const result = await ssh.putFile(parsedSourceFile, parsedDestinationFile, sftp);
             winston.info(`Successfully copied '${parsedSourceFile}' to '${parsedDestinationFile}'`);
         }
     }
@@ -72,7 +75,7 @@ co(function* () {
         const parsedDestinationFile = toLinuxPath(addParameters(file.destination));
 
         winston.info(`Queuing '${parsedSourceFile}' to '${parsedDestinationFile}'`);
-        const result = yield ssh.putFile(parsedSourceFile, parsedDestinationFile, sftp);
+        const result = await ssh.putFile(parsedSourceFile, parsedDestinationFile, sftp);
         winston.info(`Successfully copied '${parsedSourceFile}' to '${parsedDestinationFile}'`);
     }
 
@@ -80,7 +83,7 @@ co(function* () {
     // Execute commands
     const commands = jsonFile.commands;
     for (const command of commands) {
-        const result = yield ssh.execCommand(addParameters(command));
+        const result = await ssh.execCommand(addParameters(command));
 
         if (result.code !== 0) {
             winston.error(result.stderr, result);
@@ -95,9 +98,7 @@ co(function* () {
     }
 
     ssh.dispose();
-}).catch((err) => {
-    winston.error(err.message, err);
-});
+}
 
 function toLinuxPath(str) {
     return str.replace(/\\/g, '/');
