@@ -5,7 +5,8 @@
   "main": "./src/app.js",
   "scripts": {
     "prepublish": "tsc",
-    "start": "tsc & node ./src/app.js -f sample.json --machine yourhost --username yourusername --password yourpassword"
+    "lint": "tslint ./src/**/*.ts --exclude ./src/**/*.d.ts",
+    "start": "tsc & node ./src/app.js -f sample.json --machine developersworkspace.co.za --username root --password MidericK96"
   },
   "repository": {
     "type": "git",

@@ -10,8 +10,8 @@
     ],
     "directories": [
         {
-            "source": "./test",
-            "destination": "/uploads"
+            "source": "./test-files",
+            "destination": "/opt/ssh-deployer/test-files"
         }
     ],
     "files": []
