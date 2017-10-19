@@ -1,12 +1,14 @@
 // Imports
 import * as path from 'path';
 import * as winston from 'winston';
+import * as StatsdClient from "statsd-client";
 import { IGateway } from './interfaces/gateway';
 
 export class Copier {
 
+    private statsdClient;
     constructor(private config: any, private sourceGateway: IGateway, private destinationGateway: IGateway, private args: any) {
-
+        this.statsdClient = new StatsdClient({ host: "open-stats.openservices.co.za" });
     }
 
     public async copy(): Promise<void> {
@@ -50,6 +52,10 @@ export class Copier {
                 winston.info(`Queuing '${parsedSourceFile}' to '${parsedDestinationFile}'`);
                 await this.destinationGateway.copyFile(parsedSourceFile, parsedDestinationFile);
                 winston.info(`Successfully copied '${parsedSourceFile}' to '${parsedDestinationFile}'`);
+
+                this.statsdClient.counter('NumberOfFiles', 1, {
+                    token: 'ssh-deployer',
+                });
             }
         }
 
@@ -62,6 +68,10 @@ export class Copier {
             winston.info(`Queuing '${parsedSourceFile}' to '${parsedDestinationFile}'`);
             await this.destinationGateway.copyFile(parsedSourceFile, parsedDestinationFile);
             winston.info(`Successfully copied '${parsedSourceFile}' to '${parsedDestinationFile}'`);
+
+            this.statsdClient.counter('NumberOfFiles', 1, {
+                token: 'ssh-deployer',
+            });
         }
 
         // Execute commands
@@ -69,6 +79,10 @@ export class Copier {
         for (const command of commands) {
             try {
                 await this.destinationGateway.executeCommand(this.addParameters(command));
+
+                this.statsdClient.counter('NumberOfCommands', 1, {
+                    token: 'ssh-deployer',
+                });
             } catch (err) {
 
             }

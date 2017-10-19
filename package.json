@@ -1,12 +1,12 @@
 {
   "name": "ssh-deployer",
-  "version": "0.3.11",
+  "version": "0.3.12",
   "description": "",
   "main": "./src/app.js",
   "scripts": {
     "prepublish": "tsc",
     "lint": "tslint ./src/**/*.ts --exclude ./src/**/*.d.ts",
-    "start": "tsc & node ./src/app.js -f sample.json --machine developersworkspace.co.za --username root --password MidericK96"
+    "start": "tsc & node ./src/app.js -f sample.json --machine 127.0.0.1 --username username --password password"
   },
   "repository": {
     "type": "git",
@@ -22,6 +22,7 @@
     "fs-extra": "^3.0.1",
     "node-ssh": "^4.2.2",
     "recursive-readdir-sync": "^1.0.6",
+    "statsd-client": "^0.4.0",
     "winston": "^2.3.1",
     "yargs": "^8.0.1"
   },
